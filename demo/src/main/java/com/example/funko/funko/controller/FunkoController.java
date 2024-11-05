@@ -1,7 +1,8 @@
 package com.example.funko.funko.controller;
 
+import com.example.funko.funko.dto.input.InputFunko;
+import com.example.funko.funko.dto.output.OutputFunko;
 import com.example.funko.funko.mapper.FunkoMapper;
-import com.example.funko.funko.model.FunkoWithCategoryName;
 import com.example.funko.funko.services.FunkoService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -37,11 +38,11 @@ public class FunkoController {
      * @return Un ResponseEntity que contiene una lista de figuras de Funko con sus nombres de categorías asociadas.
      */
     @GetMapping
-    public ResponseEntity<List<FunkoWithCategoryName>> getAllFunkos() {
+    public ResponseEntity<List<OutputFunko>> getAllFunkos() {
         logger.info("Buscando todos los funkos");
         return ResponseEntity.ok(
                 service.findAll().stream()
-                        .map(FunkoMapper::toFunkoWithCategoryName).toList()
+                        .map(FunkoMapper::toOutputFunko).toList()
         );
     }
 
@@ -52,10 +53,10 @@ public class FunkoController {
      * @return Un ResponseEntity que contiene la figura de Funko solicitada con su nombre de categoría asociado.
      */
     @GetMapping("/{id}")
-    public ResponseEntity<FunkoWithCategoryName> getFunkoById(@PathVariable Long id) {
+    public ResponseEntity<OutputFunko> getFunkoById(@PathVariable Long id) {
         logger.info("Buscando el funko con id:" + id);
         return ResponseEntity.ok(
-                FunkoMapper.toFunkoWithCategoryName(
+                FunkoMapper.toOutputFunko(
                         service.findById(id)
                 )
         );
@@ -64,15 +65,15 @@ public class FunkoController {
     /**
      * Recupera una lista de figuras de Funko por su nombre.
      *
-     * @param nombre El nombre de las figuras de Funko que se van a recuperar.
+     * @param name El nombre de las figuras de Funko que se van a recuperar.
      * @return Un ResponseEntity que contiene una lista de figuras de Funko con sus nombres de categorías asociados.
      */
     @GetMapping("name/{name}")
-    public ResponseEntity<List<FunkoWithCategoryName>> getFunkosByNombre(@PathVariable String name) {
+    public ResponseEntity<List<OutputFunko>> getFunkosByNombre(@PathVariable String name) {
         logger.info("Fetching Funkos by nombre {}", name);
         return ResponseEntity.ok(
                 service.findByName(name).stream()
-                        .map(FunkoMapper::toFunkoWithCategoryName)
+                        .map(FunkoMapper::toOutputFunko)
                         .toList()
         );
     }
@@ -84,10 +85,10 @@ public class FunkoController {
      * @return Un ResponseEntity que contiene la figura de Funko recién creada con su nombre de categoría asociado.
      */
     @PostMapping
-    public ResponseEntity<FunkoWithCategoryName> save(@RequestBody FunkoWithCategoryName funko) {
+    public ResponseEntity<OutputFunko> save(@Valid @RequestBody InputFunko funko) {
         logger.info("Creando un nuevo funko");
         return ResponseEntity.status(HttpStatus.CREATED).body(
-                FunkoMapper.toFunkoWithCategoryName(
+                FunkoMapper.toOutputFunko(
                         service.save(
                                 FunkoMapper.toFunko(funko)
                         )
@@ -103,13 +104,13 @@ public class FunkoController {
      * @return Un ResponseEntity que contiene la figura de Funko actualizada con su nombre de categoría asociado.
      */
     @PutMapping("/{id}")
-    public ResponseEntity<FunkoWithCategoryName> updateFunko(
+    public ResponseEntity<OutputFunko> updateFunko(
             @PathVariable Long id,
-            @Valid @RequestBody FunkoWithCategoryName updatedFunko
+            @Valid @RequestBody InputFunko updatedFunko
     ) {
         logger.info("Uctualizando Funko con ID {}", id);
         return ResponseEntity.ok(
-                FunkoMapper.toFunkoWithCategoryName(
+                FunkoMapper.toOutputFunko(
                         service.update(
                                 id,
                                 FunkoMapper.toFunko(updatedFunko)
@@ -125,10 +126,10 @@ public class FunkoController {
      * @return Un ResponseEntity que contiene la figura de Funko eliminada con su nombre de categoría asociado.
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<FunkoWithCategoryName> deleteFunko(@PathVariable Long id) {
+    public ResponseEntity<OutputFunko> deleteFunko(@PathVariable Long id) {
         logger.info("Borrando Funko con ID {}", id);
         return ResponseEntity.ok(
-                FunkoMapper.toFunkoWithCategoryName(
+                FunkoMapper.toOutputFunko(
                         service.delete(id))
         );
     }

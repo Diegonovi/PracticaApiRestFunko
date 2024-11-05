@@ -29,13 +29,10 @@ public class Funko {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "funko_id")
     private Long id = DEFAULT_ID;
-    @NotBlank(message = "El nombre no puede estar vacío")
     @Column(name = "nombre", nullable = false)
     private String name;
-    @Min(value = 0, message = "El precio no puede ser menor de 0")
     @Column(name = "precio", nullable = false)
     private Double price;
-    @Past
     @Column(name = "fecha_lanzamiento", nullable = false)
     private LocalDate releaseDate;
     @ManyToOne(cascade = {CascadeType.MERGE, CascadeType.REFRESH})

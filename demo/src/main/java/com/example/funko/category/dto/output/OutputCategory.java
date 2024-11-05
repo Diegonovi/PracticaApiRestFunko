@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 public class OutputCategory {
     private String id;
     private String name;
+    private String description;
     private String createdAt;
     private String updatedAt;
     private Boolean isDeleted = false;

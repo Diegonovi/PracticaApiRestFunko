@@ -3,7 +3,6 @@ package com.example.funko.category.controller;
 import com.example.funko.category.dto.input.InputCategory;
 import com.example.funko.category.dto.output.OutputCategory;
 import com.example.funko.category.mapper.CategoryMapper;
-import com.example.funko.category.model.Category;
 import com.example.funko.category.service.CategoryService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.RequestMapping;

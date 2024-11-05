@@ -3,6 +3,7 @@ package com.example.funko.category.model;
 import com.example.funko.funko.model.Funko;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -25,8 +26,13 @@ public class Category {
     @Id
     private UUID id = UUID.randomUUID();
     @Column(name = "name", nullable = false, unique = true)
-    @NotBlank
     private String name;
+    @Embedded
+    @AttributeOverrides({
+            @AttributeOverride( name = "createdAt", column = @Column(name = "created")),
+            @AttributeOverride( name = "updatedAt", column = @Column(name = "last_updated")),
+    })
+    private Description description;
     @OneToMany(mappedBy = "category", cascade = CascadeType.REMOVE)
     private List<Funko> funkos = Collections.emptyList();
     @CreatedBy

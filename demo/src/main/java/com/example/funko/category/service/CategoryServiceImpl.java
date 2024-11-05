@@ -4,6 +4,7 @@ import com.example.funko.category.exceptions.CategoryAlreadyExistsException;
 import com.example.funko.category.exceptions.CategoryDoesNotExistException;
 import com.example.funko.category.exceptions.CategoryException;
 import com.example.funko.category.model.Category;
+import com.example.funko.category.model.Description;
 import com.example.funko.category.repository.CategoryRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,9 +92,17 @@ public class CategoryServiceImpl implements CategoryService {
                 // Si la categoría que estas intentando actualizar tiene un nombre que ya existe en la BBDD
                 if (result2.get().getId() != id) throw new CategoryAlreadyExistsException("Ya existe una categoría con el nombre " + updatedCategory.getName());
             }
+
             Category existingCategory = result.get();
             categoryRepository.deleteById(id);
             existingCategory.setName(updatedCategory.getName());
+            if (!result.get().getDescription().getText().equals(updatedCategory.getDescription().getText())){
+                Description description = new Description();
+                description.setText(updatedCategory.getDescription().getText());
+                description.setUpdatedAt(LocalDateTime.now());
+                description.setCreatedAt(result.get().getDescription().getCreatedAt());
+                existingCategory.setDescription(updatedCategory.getDescription());
+            }
             return save(existingCategory);
         } else throw new CategoryDoesNotExistException("Categoria no encontrada para el id: " + id);
     }
