@@ -24,13 +24,18 @@ import java.util.stream.Stream;
 @Service
 public class FileSystemStorageService implements StorageService{
 
-    @Value("${images.Storage}")
+    @Value("${images.storage}")
     private Path rootLocation;
 
     @Override
     @PostConstruct
     public void init() {
-
+        try {
+            Files.createDirectories(rootLocation);
+        }
+        catch (IOException e) {
+            throw new StorageException("Could not initialize storage", e);
+        }
     }
 
     @Override
@@ -108,9 +113,9 @@ public class FileSystemStorageService implements StorageService{
     @Override
     public String getUrl(String filename) {
         return MvcUriComponentsBuilder
-                // El segundo argumento es necesario solo cuando queremos obtener la imagen
-                // En este caso tan solo necesitamos obtener la URL
-                .fromMethodName(FilesController.class, "serveFile", filename, null)
-                .build().toUriString();
+            // El segundo argumento es necesario solo cuando queremos obtener la imagen
+            // En este caso tan solo necesitamos obtener la URL
+            .fromMethodName(FilesController.class, "serveFile", filename, null)
+            .build().toUriString();
     }
 }

@@ -3,6 +3,7 @@ package com.example.funko.category.service;
 import com.example.funko.category.exceptions.CategoryAlreadyExistsException;
 import com.example.funko.category.exceptions.CategoryDoesNotExistException;
 import com.example.funko.category.model.Category;
+import com.example.funko.category.model.Description;
 import com.example.funko.category.repository.CategoryRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,7 +32,10 @@ class CategoryServiceImplTest {
     @BeforeEach
     void setUp() {
         category = new Category();
+        Description description = new Description();
+        description.setText("description");
         category.setName("test");
+        category.setDescription(description);
     }
 
     @Test

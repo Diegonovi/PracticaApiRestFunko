@@ -2,9 +2,6 @@ package com.example.funko.funko.model;
 
 import com.example.funko.category.model.Category;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Past;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

@@ -19,7 +19,6 @@ import java.util.Map;
 public class FilesController {
     private StorageService storageService;
 
-    // También podemos inyectar dependencias por el setter
     @Autowired
     public void setStorageService(StorageService storageService) {
         this.storageService = storageService;
@@ -47,12 +46,9 @@ public class FilesController {
     }
 
     @PostMapping(value = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    // Aunque no es obligatorio, podemos indicar que se consume multipart/form-data
-    // Para ficheros usamos, Resuqest part, porque lo tenemos dividido en partes
     public ResponseEntity<Map<String, Object>> uploadFile(
             @RequestPart("file") MultipartFile file) {
 
-        // Almacenamos el fichero y obtenemos su URL
         String urlImagen = null;
 
         if (!file.isEmpty()) {
@@ -65,6 +61,9 @@ public class FilesController {
         }
     }
 
-    // Implementar el resto de metodos del servicio que nos interesen...
-    // Delete file, listar ficheros, etc....
+    @DeleteMapping(value = "{filename:.+}")
+    public ResponseEntity<Void> deleteFile(@PathVariable String filename) {
+        //storageService(filename);
+        return ResponseEntity.noContent().build();
+    }
 }
