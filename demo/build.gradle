@@ -2,6 +2,7 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.3.4'
 	id 'io.spring.dependency-management' version '1.1.6'
+	id 'jacoco'
 }
 
 group = 'com.example'
@@ -50,8 +51,27 @@ dependencies {
 	testImplementation("org.mockito:mockito-junit-jupiter:5.5.0")
 	//Thymeleaf
 	implementation("org.springframework.boot:spring-boot-starter-thymeleaf:3.3.5")
+	//Proyecy Reactor
+	implementation("io.projectreactor:reactor-core:3.6.11")
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
+	finalizedBy jacocoTestReport
+}
+
+tasks.jacocoTestReport {
+	dependsOn(tasks.test) // tests are required to run before generating the report
+}
+
+jacoco {
+	toolVersion = "0.8.7"
+}
+
+tasks.jacocoTestReport {
+	reports {
+		xml.required = false
+		csv.required = false
+		html.outputLocation = layout.buildDirectory.dir("jacocoHtml")
+	}
 }

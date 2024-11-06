@@ -2,8 +2,11 @@ package com.example.funko.category.controller;
 
 import com.example.funko.category.dto.input.InputCategory;
 import com.example.funko.category.dto.output.OutputCategory;
+import com.example.funko.category.exceptions.CategoryDoesNotExistException;
 import com.example.funko.category.mapper.CategoryMapper;
+import com.example.funko.category.model.Category;
 import com.example.funko.category.service.CategoryService;
+import com.example.funko.category.storage.json.CategoryJsonStorageImpl;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,9 +17,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-import java.util.UUID;
+import java.io.File;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Controlador para administrar categorías.
@@ -28,10 +33,12 @@ import java.util.UUID;
 public class CategoryController {
     private final Logger logger = LoggerFactory.getLogger(CategoryController.class);
     private final CategoryService service;
+    private final CategoryJsonStorageImpl categoryJsonStorage;
 
     @Autowired
-    public CategoryController(CategoryService service) {
+    public CategoryController(CategoryService service, CategoryJsonStorageImpl categoryJsonStorageImpl) {
         this.service = service;
+        this.categoryJsonStorage = categoryJsonStorageImpl;
     }
 
     /**
@@ -139,6 +146,56 @@ public class CategoryController {
                 CategoryMapper.toOutputCategory(
                         service.delete(id, logically))
         );
+    }
+
+    /**
+     * Importa las categorías de un fichero JSON.
+     *
+     * @param file El fichero JSON con las categorías.
+     * @return Un ResponseEntity que contiene el resultado de la importación.
+    */
+    @PostMapping("/importjson")
+    public ResponseEntity importCategories(
+            @RequestPart("file") MultipartFile file
+    ) {
+        logger.info("Importando categorias de un fichero json");
+        File tempFile;
+        try {
+            tempFile = File.createTempFile(UUID.randomUUID().toString(), ".json");
+            file.transferTo(tempFile);
+            LinkedList<Category> list = new LinkedList<>(); // Lista de categorias
+            AtomicReference<Boolean> somethingWentWrong = new AtomicReference<>(false);
+
+            categoryJsonStorage.getCategoriesFromFile(tempFile)
+                    .doOnNext(category -> {
+                            if (category == null) somethingWentWrong.set(true);
+                            else list.add(category);
+                    }).subscribe();
+            tempFile.delete();
+            // Si alguna no se ha podido importar
+            Boolean result = somethingWentWrong.get();
+            if (result) return ResponseEntity.badRequest().body("Hubo un problema al importar el fichero JSON");
+            // Ver si ninguna existe en la base de datos
+            Category existingCategory = null;
+            for (Category category : list) {
+                try {
+                    existingCategory = service.findByName(category.getName());
+                }catch (CategoryDoesNotExistException ignored){};
+            }
+            if (existingCategory != null) return ResponseEntity.status(HttpStatus.CONFLICT).body("La categoría con nombre: " + existingCategory.getName() + " ya existe");
+            // Guardar las categorías en la base de datos
+            List<OutputCategory> saved = new LinkedList<>();
+            for (Category category : list) {
+                saved.add(CategoryMapper.toOutputCategory(
+                        service.save(category)
+                ));
+            }
+            return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+
+        }catch (Exception e){
+            logger.error("Error creating temporary file: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
     }
 }
 

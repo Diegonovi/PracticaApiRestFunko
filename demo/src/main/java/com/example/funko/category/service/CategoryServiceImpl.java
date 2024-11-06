@@ -6,6 +6,8 @@ import com.example.funko.category.exceptions.CategoryException;
 import com.example.funko.category.model.Category;
 import com.example.funko.category.model.Description;
 import com.example.funko.category.repository.CategoryRepository;
+import com.example.funko.category.storage.json.CategoryJsonStorage;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +17,8 @@ import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
+import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -31,13 +35,36 @@ public class CategoryServiceImpl implements CategoryService {
 
     private final Logger logger = LoggerFactory.getLogger(CategoryServiceImpl.class);
     private final CategoryRepository categoryRepository;
+    private final CategoryJsonStorage categoryJsonStorage;
 
     /**
      * Constructor que inyecta la dependencia CategoryRepository.
      */
     @Autowired
-    public CategoryServiceImpl(CategoryRepository categoryRepository) {
+    public CategoryServiceImpl(
+            CategoryRepository categoryRepository,
+            CategoryJsonStorage categoryJsonStorage
+    ) {
+        this.categoryJsonStorage = categoryJsonStorage;
         this.categoryRepository = categoryRepository;
+    }
+
+    /**
+     * Inicializa la categoría con algunos datos de prueba.
+     * Este método se ejecuta solo una vez al iniciar la aplicación.
+     */
+    @PostConstruct
+    public void init() {
+        logger.info("Inicializando categorías con datos de prueba");
+        try {
+            URL location = ClassLoader.getSystemResource("data/categories.json");
+            File categoryJsonFile = new File(location.getPath());
+            categoryJsonStorage.getCategoriesFromFile(categoryJsonFile)
+                    .doOnNext(categoryRepository::save)
+                    .subscribe();
+        }catch (Exception e){
+            logger.error("Error al inicializar las categorías con datos de prueba", e);
+        }
     }
 
     /**

@@ -1,0 +1,22 @@
+[
+  {
+    "name": "SERIE",
+    "description": "A TV series."
+  },
+  {
+    "name": "DISNEY",
+    "description": "Disney-related content."
+  },
+  {
+    "name": "SUPERHEROES",
+    "description": "Superhero movies or comics."
+  },
+  {
+    "name": "PELICULA",
+    "description": "A movie."
+  },
+  {
+    "name": "OTROS",
+    "description": "Other types of content."
+  }
+]
