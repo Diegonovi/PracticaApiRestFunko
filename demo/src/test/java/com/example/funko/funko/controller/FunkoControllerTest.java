@@ -58,17 +58,20 @@ class FunkoControllerTest {
 
         category.setName("Idk");
 
+        //Funko
         funko.setId(1L);
         funko.setName("Test Funko");
         funko.setPrice(10.0);
         funko.setReleaseDate(releaseDate);
         funko.setCategory(category);
 
+        //InputFunko
         inputFunko.setName(funko.getName());
         inputFunko.setPrice(funko.getPrice());
         inputFunko.setReleaseDate(funko.getReleaseDate());
         inputFunko.setCategory(category.getName());
 
+        //OutputFunko
         outputFunko.setId(funko.getId());
         outputFunko.setName(funko.getName());
         outputFunko.setPrice(funko.getPrice());
@@ -141,10 +144,12 @@ class FunkoControllerTest {
 
     @Test
     void save() throws Exception {
+        // Arrange
         when(service.save(funko)).thenReturn(funko);
 
+        // Act
         try (MockedStatic<FunkoMapper> mapperMock = mockStatic(FunkoMapper.class)) {
-            mapperMock.when(() -> FunkoMapper.toFunko(inputFunko)).thenReturn(funko);
+            mapperMock.when(() -> FunkoMapper.toFunkoWithProvisionalCategory(inputFunko)).thenReturn(funko);
             mapperMock.when(() -> FunkoMapper.toOutputFunko(funko)).thenReturn(outputFunko);
             MockHttpServletResponse response = mockMvc.perform(
                             post("/funkos")
@@ -155,9 +160,15 @@ class FunkoControllerTest {
 
             OutputFunko result = mapper.readValue(response.getContentAsString(), OutputFunko.class);
 
+            // Assert
             assertEquals(201, response.getStatus());
             assertEquals(outputFunko, result);
         }
+    }
+
+    @Test
+    void saveInvalidFunko() throws Exception{
+
     }
 
     @Test
@@ -167,7 +178,7 @@ class FunkoControllerTest {
         when(service.update(funko.getId(), funko)).thenReturn(funko);
 
         try (MockedStatic<FunkoMapper> mapperMock = mockStatic(FunkoMapper.class)) {
-            mapperMock.when(() -> FunkoMapper.toFunko(inputFunko)).thenReturn(funko);
+            mapperMock.when(() -> FunkoMapper.toFunkoWithProvisionalCategory(inputFunko)).thenReturn(funko);
             mapperMock.when(() -> FunkoMapper.toOutputFunko(funko)).thenReturn(outputFunko);
             MockHttpServletResponse response = mockMvc.perform(
                             put("/funkos/" + funko.getId())

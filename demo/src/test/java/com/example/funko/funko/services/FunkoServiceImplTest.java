@@ -6,6 +6,8 @@ import com.example.funko.category.repository.CategoryRepository;
 import com.example.funko.funko.exceptions.FunkoNotFoundException;
 import com.example.funko.funko.model.Funko;
 import com.example.funko.funko.repository.FunkosRepository;
+import com.example.funko.websocket.config.WebSocketConfig;
+import com.example.funko.websocket.config.WebSocketHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,8 +20,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class FunkoServiceImplTest {
@@ -29,6 +30,12 @@ class FunkoServiceImplTest {
 
     @Mock
     private CategoryRepository categoryRepository;
+
+    @Mock
+    private WebSocketHandler webSocketHandler;
+
+    @Mock
+    private WebSocketConfig webSocketConfig;
 
     @InjectMocks
     private FunkoServiceImpl funkoService;
@@ -180,4 +187,5 @@ class FunkoServiceImplTest {
         assertEquals(1, result.size());
         assertEquals(funko, result.get(0));
     }
+
 }

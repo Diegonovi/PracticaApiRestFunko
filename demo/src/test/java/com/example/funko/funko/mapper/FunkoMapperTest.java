@@ -42,7 +42,7 @@ class FunkoMapperTest {
     @Test
     void toFunko() {
         // Act
-        Funko result = FunkoMapper.toFunko(inputFunko);
+        Funko result = FunkoMapper.toFunkoWithProvisionalCategory(inputFunko);
 
         // Assert
         assertNotNull(result);

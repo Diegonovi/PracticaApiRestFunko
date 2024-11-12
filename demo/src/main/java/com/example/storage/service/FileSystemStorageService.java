@@ -118,4 +118,13 @@ public class FileSystemStorageService implements StorageService{
             .fromMethodName(FilesController.class, "serveFile", filename, null)
             .build().toUriString();
     }
+
+    @Override
+    public void delete(String filename) {
+        try {
+            Files.delete(load(filename).toAbsolutePath());
+        } catch (IOException e) {
+            throw new StorageException("No se puede borrar fichero: " + filename, e);
+        }
+    }
 }

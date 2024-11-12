@@ -19,6 +19,7 @@ public class OutputFunko {
     private Long id = 0L;
     private String name;
     private Double price;
+    private Integer stock;
     private LocalDate releaseDate;
     private String category;
     private String createdAt;

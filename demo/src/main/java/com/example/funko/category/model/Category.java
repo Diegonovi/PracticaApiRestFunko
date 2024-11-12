@@ -1,6 +1,8 @@
 package com.example.funko.category.model;
 
 import com.example.funko.funko.model.Funko;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,7 +33,7 @@ public class Category {
             @AttributeOverride( name = "updatedAt", column = @Column(name = "last_updated")),
     })
     private Description description;
-    @OneToMany(mappedBy = "category", cascade = CascadeType.REMOVE)
+    @OneToMany(mappedBy = "category", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
     private List<Funko> funkos = Collections.emptyList();
     @CreatedBy
     @Column(name = "created_at", nullable = false)

@@ -2,6 +2,7 @@ package com.example.storage.controller;
 
 import com.example.storage.service.StorageService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.constraints.Null;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
@@ -63,7 +64,7 @@ public class FilesController {
 
     @DeleteMapping(value = "{filename:.+}")
     public ResponseEntity<Void> deleteFile(@PathVariable String filename) {
-        //storageService(filename);
+        storageService.delete(filename);
         return ResponseEntity.noContent().build();
     }
 }

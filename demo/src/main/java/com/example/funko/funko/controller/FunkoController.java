@@ -90,7 +90,7 @@ public class FunkoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 FunkoMapper.toOutputFunko(
                         service.save(
-                                FunkoMapper.toFunko(funko)
+                                FunkoMapper.toFunkoWithProvisionalCategory(funko)
                         )
                 )
         );
@@ -113,7 +113,7 @@ public class FunkoController {
                 FunkoMapper.toOutputFunko(
                         service.update(
                                 id,
-                                FunkoMapper.toFunko(updatedFunko)
+                                FunkoMapper.toFunkoWithProvisionalCategory(updatedFunko)
                         )
                 )
         );

@@ -116,13 +116,12 @@ public class CategoryServiceImpl implements CategoryService {
 
         if (result.isPresent()) { // Si existe esa categoria
             if (result2.isPresent()) { // Si existe una categoría con ese nombre
-                // Si la categoría que estas intentando actualizar tiene un nombre que ya existe en la BBDD
+                // Si la categoría que estás intentando actualizar tiene un nombre que ya existe en la BBDD
                 if (result2.get().getId() != id) throw new CategoryAlreadyExistsException("Ya existe una categoría con el nombre " + updatedCategory.getName());
             }
-
             Category existingCategory = result.get();
-            categoryRepository.deleteById(id);
             existingCategory.setName(updatedCategory.getName());
+            // Si la descripción es diferente a la que tenía
             if (!result.get().getDescription().getText().equals(updatedCategory.getDescription().getText())){
                 Description description = new Description();
                 description.setText(updatedCategory.getDescription().getText());
@@ -130,7 +129,7 @@ public class CategoryServiceImpl implements CategoryService {
                 description.setCreatedAt(result.get().getDescription().getCreatedAt());
                 existingCategory.setDescription(updatedCategory.getDescription());
             }
-            return save(existingCategory);
+            return categoryRepository.save(existingCategory);
         } else throw new CategoryDoesNotExistException("Categoria no encontrada para el id: " + id);
     }
 
@@ -149,7 +148,7 @@ public class CategoryServiceImpl implements CategoryService {
         logger.info("Eliminando la categoría con id: " + id);
         Optional<Category> category = categoryRepository.findById(id);
         if (category.isEmpty()) {
-            throw new CategoryDoesNotExistException("Error al actualizar la categoría con id: " + id);
+            throw new CategoryDoesNotExistException("Error al borrar la categoría con id: " + id);
         }
         Category validCategory = category.get();
         validCategory.setIsDeleted(true);

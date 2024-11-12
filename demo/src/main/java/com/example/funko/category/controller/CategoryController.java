@@ -193,7 +193,7 @@ public class CategoryController {
             return ResponseEntity.status(HttpStatus.CREATED).body(saved);
 
         }catch (Exception e){
-            logger.error("Error creating temporary file: {}", e.getMessage());
+            logger.error("Error importando el fichero JSON: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
     }

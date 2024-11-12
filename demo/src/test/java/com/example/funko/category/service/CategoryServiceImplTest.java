@@ -5,6 +5,8 @@ import com.example.funko.category.exceptions.CategoryDoesNotExistException;
 import com.example.funko.category.model.Category;
 import com.example.funko.category.model.Description;
 import com.example.funko.category.repository.CategoryRepository;
+import com.example.funko.funko.model.Funko;
+import com.example.funko.funko.repository.FunkosRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,6 +14,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,6 +27,9 @@ class CategoryServiceImplTest {
 
     @Mock
     private CategoryRepository categoryRepository;
+
+    @Mock
+    private FunkosRepository funkosRepository;
 
     @InjectMocks
     private CategoryServiceImpl categoryService;
@@ -92,7 +99,9 @@ class CategoryServiceImplTest {
         Category updatedCategory = category;
         updatedCategory.setName("updated");
         when(categoryRepository.findById(category.getId())).thenReturn(Optional.of(category));
+        when(categoryRepository.findByName(category.getName())).thenReturn(Optional.of(category));
         when(categoryRepository.save(category)).thenReturn(updatedCategory);
+        when(funkosRepository.findAllByCategoryId(category.getId())).thenReturn(Collections.emptyList());
 
         // Act
         Category result = categoryService.update(category.getId(),updatedCategory);

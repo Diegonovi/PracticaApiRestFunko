@@ -30,9 +30,11 @@ public class Funko {
     private String name;
     @Column(name = "precio", nullable = false)
     private Double price;
+    @Column(name = "stock", nullable = false)
+    private Integer stock;
     @Column(name = "fecha_lanzamiento", nullable = false)
     private LocalDate releaseDate;
-    @ManyToOne(cascade = {CascadeType.MERGE, CascadeType.REFRESH})
+    @ManyToOne(cascade = {CascadeType.MERGE, CascadeType.REFRESH}, fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
     @CreatedBy
