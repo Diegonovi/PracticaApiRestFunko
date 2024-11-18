@@ -26,19 +26,4 @@ public class CategoryMapper {
         outputCategory.setIsDeleted(category.getIsDeleted());
         return outputCategory;
     }
-
-    /**
-     * Convierte un DTO de InputCategory en un objeto de modelo de categoría.
-     *
-     * @param inputCategory El DTO de InputCategory que se va a convertir.
-     * @return Un objeto de modelo de categoría que contiene los datos del DTO de InputCategory de entrada.
-     */
-    public static Category toCategory(InputCategory inputCategory) {
-        Category category = new Category();
-        Description description = new Description();
-        description.setText(inputCategory.getDescription());
-        category.setName(inputCategory.getName());
-        category.setDescription(description);
-        return category;
-    }
 }

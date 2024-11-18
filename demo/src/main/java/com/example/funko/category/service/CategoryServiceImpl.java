@@ -1,13 +1,17 @@
 package com.example.funko.category.service;
 
+import com.example.funko.category.dto.input.InputCategory;
 import com.example.funko.category.exceptions.CategoryAlreadyExistsException;
 import com.example.funko.category.exceptions.CategoryDoesNotExistException;
 import com.example.funko.category.exceptions.CategoryException;
+import com.example.funko.category.exceptions.CategoryHasFunkosException;
 import com.example.funko.category.model.Category;
 import com.example.funko.category.model.Description;
 import com.example.funko.category.repository.CategoryRepository;
 import com.example.funko.category.storage.json.CategoryJsonStorage;
+import com.example.funko.funko.model.Funko;
 import jakarta.annotation.PostConstruct;
+import jakarta.persistence.criteria.Join;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +19,9 @@ import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -60,7 +67,7 @@ public class CategoryServiceImpl implements CategoryService {
             URL location = ClassLoader.getSystemResource("data/categories.json");
             File categoryJsonFile = new File(location.getPath());
             categoryJsonStorage.getCategoriesFromFile(categoryJsonFile)
-                    .doOnNext(categoryRepository::save)
+                    .doOnNext(this::save)
                     .subscribe();
         }catch (Exception e){
             logger.error("Error al inicializar las categorías con datos de prueba", e);
@@ -77,7 +84,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @Cacheable(key = "#id")
     public Category findById(UUID id) {
-        logger.info("Buscando la categoría con id: " + id);
+        logger.info("Buscando la categoría con id: {}", id);
         return categoryRepository.findById(id)
                 .orElseThrow(() -> new CategoryDoesNotExistException("Categoría no encontrada para el id: " + id));
     }
@@ -90,12 +97,17 @@ public class CategoryServiceImpl implements CategoryService {
      */
     @Override
     @CachePut(key = "#category.id")
-    public Category save(Category category) {
-        logger.info("Guardando la categoría: " + category);
-        if (!categoryRepository.findByName(category.getName()).isEmpty()){
+    public Category save(InputCategory category) {
+        logger.info("Guardando la categoría: {}", category);
+        Category newCategory = new Category();
+        Description newDescription = new Description();
+        newDescription.setText(category.getDescription());
+        newCategory.setName(category.getName());
+        newCategory.setDescription(newDescription);
+        if (categoryRepository.findByName(category.getName()).isPresent()){
             throw new CategoryAlreadyExistsException("Ya existe una categoría con el nombre: " + category.getName());
         }
-        return categoryRepository.save(category);
+        return categoryRepository.save(newCategory);
     }
 
     /**
@@ -109,25 +121,25 @@ public class CategoryServiceImpl implements CategoryService {
      */
     @Override
     @CachePut(key = "#id")
-    public Category update(UUID id, Category updatedCategory) {
-        logger.info("Actualizando la categoría con id: " + id + ", nuevo valor: " + updatedCategory);
+    public Category update(UUID id, InputCategory updatedCategory) {
+        logger.info("Actualizando la categoría con id: {}",id);
         Optional<Category> result = categoryRepository.findById(id);
         Optional<Category> result2 = categoryRepository.findByName(updatedCategory.getName());
 
         if (result.isPresent()) { // Si existe esa categoria
-            if (result2.isPresent()) { // Si existe una categoría con ese nombre
+            if (result2.isPresent() && result2.get().getId() != id) { // Si existe una categoría con ese nombre
                 // Si la categoría que estás intentando actualizar tiene un nombre que ya existe en la BBDD
-                if (result2.get().getId() != id) throw new CategoryAlreadyExistsException("Ya existe una categoría con el nombre " + updatedCategory.getName());
+                throw new CategoryAlreadyExistsException("Ya existe una categoría con el nombre " + updatedCategory.getName());
             }
             Category existingCategory = result.get();
             existingCategory.setName(updatedCategory.getName());
             // Si la descripción es diferente a la que tenía
-            if (!result.get().getDescription().getText().equals(updatedCategory.getDescription().getText())){
+            if (!result.get().getDescription().getText().equals(updatedCategory.getDescription())){
                 Description description = new Description();
-                description.setText(updatedCategory.getDescription().getText());
+                description.setText(updatedCategory.getDescription());
                 description.setUpdatedAt(LocalDateTime.now());
                 description.setCreatedAt(result.get().getDescription().getCreatedAt());
-                existingCategory.setDescription(updatedCategory.getDescription());
+                existingCategory.setDescription(description);
             }
             return categoryRepository.save(existingCategory);
         } else throw new CategoryDoesNotExistException("Categoria no encontrada para el id: " + id);
@@ -145,10 +157,12 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     @CacheEvict(key = "#id")
     public Category delete(UUID id, Boolean logically) {
-        logger.info("Eliminando la categoría con id: " + id);
+        logger.info("Eliminando la categoría con id: {}",id);
         Optional<Category> category = categoryRepository.findById(id);
         if (category.isEmpty()) {
             throw new CategoryDoesNotExistException("Error al borrar la categoría con id: " + id);
+        } else if (!category.get().getFunkos().isEmpty()){
+            throw new CategoryHasFunkosException("Esta categoría tiene funkos, no se puede borrar");
         }
         Category validCategory = category.get();
         validCategory.setIsDeleted(true);
@@ -169,7 +183,7 @@ public class CategoryServiceImpl implements CategoryService {
      */
     @Override
     public Category findByName(String name) {
-        logger.info("Buscando las categorías con nombre: " + name);
+        logger.info("Buscando las categorías con nombre: {}", name);
         Optional<Category> result = categoryRepository.findByName(name);
         if (result.isPresent()) {
             return result.get();
@@ -182,8 +196,25 @@ public class CategoryServiceImpl implements CategoryService {
      * @return Una lista de todas las categorías.
      */
     @Override
-    public List<Category> findAll() {
+    public Page<Category> findAll(
+            Pageable pageable,
+            Optional<Boolean> isDeleted,
+            Optional<String> name
+    ) {
         logger.info("Buscando todas las categorías");
-        return categoryRepository.findAll();
+        // Criterio de búsqueda por nombre
+        Specification<Category> nameSpec = (root, query, criteriaBuilder) ->
+                name.map(m -> criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + m.toLowerCase() + "%"))
+                        .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
+
+        // Criterio de búsqueda por isDeleted
+        // Criterio de búsqueda por isDeleted
+        Specification<Category> specIsDeleted = (root, query, criteriaBuilder) ->
+                isDeleted.map(d -> criteriaBuilder.equal(root.get("isDeleted"), d))
+                        .orElseGet(() -> criteriaBuilder.isTrue(criteriaBuilder.literal(true)));
+
+        Specification<Category> criterio = Specification.where(nameSpec)
+                .and(specIsDeleted);
+        return categoryRepository.findAll(criterio, pageable);
     }
 }

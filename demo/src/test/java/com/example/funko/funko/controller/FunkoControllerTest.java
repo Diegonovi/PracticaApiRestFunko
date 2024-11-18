@@ -64,12 +64,14 @@ class FunkoControllerTest {
         funko.setPrice(10.0);
         funko.setReleaseDate(releaseDate);
         funko.setCategory(category);
+        funko.setStock(10);
 
         //InputFunko
         inputFunko.setName(funko.getName());
         inputFunko.setPrice(funko.getPrice());
         inputFunko.setReleaseDate(funko.getReleaseDate());
         inputFunko.setCategory(category.getName());
+        inputFunko.setStock(funko.getStock());
 
         //OutputFunko
         outputFunko.setId(funko.getId());
@@ -79,6 +81,7 @@ class FunkoControllerTest {
         outputFunko.setCategory(category.getName());
         outputFunko.setCreatedAt(category.getCreatedAt().toString());
         outputFunko.setUpdatedAt(category.getUpdatedAt().toString());
+        outputFunko.setStock(funko.getStock());
     }
 
     @Test
@@ -173,13 +176,17 @@ class FunkoControllerTest {
 
     @Test
     void updateFunko() throws Exception {
-        inputFunko.setName("Updated Funko");
-        funko.setName("Updated Funko");
-        when(service.update(funko.getId(), funko)).thenReturn(funko);
+        InputFunko newInfoFunko = inputFunko;
+        newInfoFunko.setName("Something else");
+        Funko updateFunko = funko;
+        updateFunko.setName("Something Else");
+        OutputFunko updatedOutputFunko = outputFunko;
+        updatedOutputFunko.setName("Something else");
+        when(service.update(funko.getId(), funko)).thenReturn(updateFunko);
 
         try (MockedStatic<FunkoMapper> mapperMock = mockStatic(FunkoMapper.class)) {
-            mapperMock.when(() -> FunkoMapper.toFunkoWithProvisionalCategory(inputFunko)).thenReturn(funko);
-            mapperMock.when(() -> FunkoMapper.toOutputFunko(funko)).thenReturn(outputFunko);
+            mapperMock.when(() -> FunkoMapper.toFunkoWithProvisionalCategory(newInfoFunko)).thenReturn(funko);
+            mapperMock.when(() -> FunkoMapper.toOutputFunko(updateFunko)).thenReturn(updatedOutputFunko);
             MockHttpServletResponse response = mockMvc.perform(
                             put("/funkos/" + funko.getId())
                                     .contentType(MediaType.APPLICATION_JSON)
@@ -190,7 +197,7 @@ class FunkoControllerTest {
             OutputFunko result = mapper.readValue(response.getContentAsString(), OutputFunko.class);
 
             assertEquals(200, response.getStatus());
-            assertEquals(outputFunko, result);
+            assertEquals(updatedOutputFunko, result);
         }
     }
 

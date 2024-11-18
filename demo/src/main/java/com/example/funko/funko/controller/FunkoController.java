@@ -4,14 +4,24 @@ import com.example.funko.funko.dto.input.InputFunko;
 import com.example.funko.funko.dto.output.OutputFunko;
 import com.example.funko.funko.mapper.FunkoMapper;
 import com.example.funko.funko.services.FunkoService;
+import com.example.utils.PageResponse;
+import com.example.utils.PaginationLinksUtils;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriComponentsBuilder;
+
 import java.util.List;
+import java.util.Optional;
 
 
 /**
@@ -26,10 +36,15 @@ public class FunkoController {
     private final Logger logger = LoggerFactory.getLogger(FunkoController.class);
 
     private final FunkoService service;
+    private final PaginationLinksUtils paginationLinksUtils;
 
     @Autowired
-    public FunkoController(FunkoService service) {
+    public FunkoController(
+            FunkoService service,
+            PaginationLinksUtils paginationLinksUtils
+    ) {
         this.service = service;
+        this.paginationLinksUtils = paginationLinksUtils;
     }
 
     /**
@@ -38,12 +53,27 @@ public class FunkoController {
      * @return Un ResponseEntity que contiene una lista de figuras de Funko con sus nombres de categorías asociadas.
      */
     @GetMapping
-    public ResponseEntity<List<OutputFunko>> getAllFunkos() {
+    public ResponseEntity<PageResponse<OutputFunko>> getAllFunkos(
+            @RequestParam(required = false) Optional<String> category,
+            @RequestParam(required = false) Optional<String> name,
+            @RequestParam(required = false) Optional<Double> maxPrice,
+            @RequestParam(required = false) Optional<Integer> minStock,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction,
+            HttpServletRequest request
+    ) {
         logger.info("Buscando todos los funkos");
-        return ResponseEntity.ok(
-                service.findAll().stream()
-                        .map(FunkoMapper::toOutputFunko).toList()
-        );
+        // Creamos el objeto de ordenación
+        Sort sort = direction.equalsIgnoreCase(Sort.Direction.ASC.name()) ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        // Creamos cómo va a ser la paginación
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromHttpUrl(request.getRequestURL().toString());
+        Page<OutputFunko> pageResult = service.findAll(PageRequest.of(page, size, sort), category, name, maxPrice, minStock)
+                .map(FunkoMapper::toOutputFunko);
+        return ResponseEntity.ok()
+                .header("link", paginationLinksUtils.createLinkHeader(pageResult, uriBuilder))
+                .body(PageResponse.of(pageResult, sortBy, direction));
     }
 
     /**
@@ -63,22 +93,6 @@ public class FunkoController {
     }
 
     /**
-     * Recupera una lista de figuras de Funko por su nombre.
-     *
-     * @param name El nombre de las figuras de Funko que se van a recuperar.
-     * @return Un ResponseEntity que contiene una lista de figuras de Funko con sus nombres de categorías asociados.
-     */
-    @GetMapping("name/{name}")
-    public ResponseEntity<List<OutputFunko>> getFunkosByNombre(@PathVariable String name) {
-        logger.info("Fetching Funkos by nombre {}", name);
-        return ResponseEntity.ok(
-                service.findByName(name).stream()
-                        .map(FunkoMapper::toOutputFunko)
-                        .toList()
-        );
-    }
-
-    /**
      * Crea una nueva figura de Funko.
      *
      * @param funko La figura de Funko que se va a crear.
@@ -89,9 +103,7 @@ public class FunkoController {
         logger.info("Creando un nuevo funko");
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 FunkoMapper.toOutputFunko(
-                        service.save(
-                                FunkoMapper.toFunkoWithProvisionalCategory(funko)
-                        )
+                        service.save(funko)
                 )
         );
     }
@@ -111,10 +123,7 @@ public class FunkoController {
         logger.info("Uctualizando Funko con ID {}", id);
         return ResponseEntity.ok(
                 FunkoMapper.toOutputFunko(
-                        service.update(
-                                id,
-                                FunkoMapper.toFunkoWithProvisionalCategory(updatedFunko)
-                        )
+                        service.update(id, updatedFunko)
                 )
         );
     }

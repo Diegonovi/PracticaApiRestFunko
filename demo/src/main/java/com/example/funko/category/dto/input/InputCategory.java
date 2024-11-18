@@ -14,7 +14,6 @@ import lombok.NoArgsConstructor;
 public class InputCategory {
     @NotBlank(message = "El nombre no puede estar vacío")
     private String name;
-    @NotNull(message = "La categoría debe tener una descripción")
     @NotBlank(message = "La categoría debe tener una descripción")
     private String description;
 }

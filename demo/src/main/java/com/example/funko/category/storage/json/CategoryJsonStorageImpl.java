@@ -24,7 +24,7 @@ public class CategoryJsonStorageImpl implements CategoryJsonStorage{
      *         Si se produce un error durante la lectura o el análisis del archivo, se emite una señal de error.
      */
     @Override
-    public Flux<Category> getCategoriesFromFile(File file) {
+    public Flux<InputCategory> getCategoriesFromFile(File file) {
         return Flux.create(fluxSink -> {
                 try{
                     ObjectMapper objectMapper = new ObjectMapper();
@@ -32,7 +32,7 @@ public class CategoryJsonStorageImpl implements CategoryJsonStorage{
                     if (list.isArray()) {
                         for (JsonNode node : list) {
                             InputCategory category = objectMapper.treeToValue(node, InputCategory.class);
-                            fluxSink.next(CategoryMapper.toCategory(category));
+                            fluxSink.next(category);
                         }
                     }
                 } catch (IOException e){

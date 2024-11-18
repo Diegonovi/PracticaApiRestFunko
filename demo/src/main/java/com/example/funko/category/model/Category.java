@@ -4,6 +4,7 @@ import com.example.funko.funko.model.Funko;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -25,6 +26,7 @@ import java.util.UUID;
 public class Category {
     @Id
     private UUID id = UUID.randomUUID();
+    @NotBlank(message = "El nombre no puede estar vacío")
     @Column(name = "name", nullable = false, unique = true)
     private String name;
     @Embedded
@@ -32,8 +34,9 @@ public class Category {
             @AttributeOverride( name = "createdAt", column = @Column(name = "created")),
             @AttributeOverride( name = "updatedAt", column = @Column(name = "last_updated")),
     })
+    @NotBlank(message = "La categoría debe tener una descripción")
     private Description description;
-    @OneToMany(mappedBy = "category", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
     private List<Funko> funkos = Collections.emptyList();
     @CreatedBy
     @Column(name = "created_at", nullable = false)

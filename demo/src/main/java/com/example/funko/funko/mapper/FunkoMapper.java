@@ -1,36 +1,16 @@
 package com.example.funko.funko.mapper;
 
-import com.example.funko.category.model.Category;
 import com.example.funko.funko.dto.input.InputFunko;
 import com.example.funko.funko.dto.output.OutputFunko;
 import com.example.funko.funko.model.Funko;
-import jakarta.validation.Valid;
-
-import java.time.LocalDate;
-
 /**
  * Esta clase proporciona métodos para mapear objetos Funko y OutputFunko.
  */
 public class FunkoMapper {
-
     /**
-     * Convierte un objeto OutputFunko a un objeto Funko con una categoría provisional.
-     *
-     * @param input El objeto InputFunko que se va a convertir.
-     * @return Un nuevo objeto Funko con los mismos datos que el input, pero con un objeto Category en lugar de un nombre de categoría.
-     * @throws jakarta.validation.ValidationException Si el objeto input no es válido.
+     * Constructor privado para evitar la creación de instancias de esta clase.
      */
-    public static @Valid Funko toFunkoWithProvisionalCategory(InputFunko input){
-        Funko newFunko = new Funko();
-        newFunko.setName(input.getName());
-        newFunko.setStock(input.getStock());
-        newFunko.setPrice(input.getPrice());
-        newFunko.setReleaseDate(input.getReleaseDate());
-        newFunko.setCategory(Category.builder()
-                .name(input.getCategory())
-                .build());
-        return newFunko;
-    }
+    private FunkoMapper() {}
 
     /**
      * Convierte un objeto Funko a un objeto FunkoOutput.
@@ -48,6 +28,15 @@ public class FunkoMapper {
                .stock(input.getStock())
                .createdAt(input.getCreatedAt().toString())
                .updatedAt(input.getUpdatedAt().toString())
+               .build();
+    }
+
+    public static InputFunko toInputFunko(Funko funko){
+        return InputFunko.builder()
+               .name(funko.getName())
+               .price(funko.getPrice())
+               .releaseDate(funko.getReleaseDate())
+               .category(funko.getCategory().getName())
                .build();
     }
 }
