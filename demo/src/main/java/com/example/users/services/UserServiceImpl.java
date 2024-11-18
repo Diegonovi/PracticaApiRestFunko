@@ -1,9 +1,11 @@
 package com.example.users.services;
 
+import com.example.users.exceptions.UserDoesntExistException;
 import com.example.users.models.User;
 import com.example.users.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -18,8 +20,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User findUserByUsername(String username) {
-        return null;
+    public User loadUserByUsername(String username){
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserDoesntExistException("Usuario con username " + username + " no encontrado"));
     }
 
     @Override

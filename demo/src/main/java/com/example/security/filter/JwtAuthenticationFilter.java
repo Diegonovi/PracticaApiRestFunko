@@ -66,13 +66,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // Comprobamos que el usuario existe y que el token es válido
             log.info("Comprobando usuario y token");
             try {
-                userDetails = userService.findUserByUsername(userName);
+                userDetails = userService.loadUserByUsername(userName);
             } catch (Exception e) {
                 log.info("Usuario no encontrado: {}", userName);
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Usuario no autorizado");
                 return;
             }
-            userService.findUserByUsername(userName);
+            userService.loadUserByUsername(userName);
             log.info("Usuario encontrado: {}", userDetails);
             if (jwtService.isTokenValid(jwt, userDetails)) {
                 log.info("JWT válido");

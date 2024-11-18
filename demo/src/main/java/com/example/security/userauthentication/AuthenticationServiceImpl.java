@@ -75,7 +75,7 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         // Autenticamos y devolvemos el token
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
-        var user = userService.findUserByUsername(request.getUsername());
+        var user = userService.loadUserByUsername(request.getUsername());
         if (!request.getPassword().contentEquals(user.getPassword())) throw new UserPasswordIsNotCorrect("La contraseña no es correcta");
         var jwt = jwtService.generateToken(user);
         return JwtAuthResponse.builder().token(jwt).build();
